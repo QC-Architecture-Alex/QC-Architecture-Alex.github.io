@@ -122,24 +122,9 @@ The next phase of the project was intended to:
 3. Tune design parameters.
 4. Validate the circuit operation through simulation.
 
-Unfortunately, restrictions within the simulation environment (**Ansys**) required significant time to be spent investigating alternative approaches and workarounds.
+Unfortunately, restrictions within the simulation environment (**Ansys**) required significant time to be spent investigating alternative approaches and workarounds. Although progress was made, the simulation could not be fully completed with the errors needed to be solved.
 
-Although progress was made, the simulation could not be fully completed within the available timeframe.
-
-> The simulation remains a work in progress and will be revisited in the near future.
-
----
-
-## Future Work
-
-The primary objective moving forward is to:
-
-- Resolve the remaining Ansys simulation issues.
-- Complete the microwave pulse analysis.
-- Validate the full circuit operation.
-- Publish a detailed guide for future learners interested in superconducting quantum hardware design.
-
----
+However, it will be worked on in the near future, to present a guide for the upcoming learners through their educational process
 
 *Tools Used: Qiskit Metal, Python*
 
