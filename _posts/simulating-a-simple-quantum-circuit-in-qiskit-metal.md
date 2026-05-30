@@ -36,7 +36,7 @@ $$
 
 The overall circuit is shown below.
 
-![Circuit Overview](/assets/images/fig1.png)
+![Circuit Overview](/assets/images/simulating-a-simple-quantum-circuit-in-qiskit-metal/fig1.png)
 
 *Figure 1 — Complete circuit layout.*
 
@@ -62,7 +62,7 @@ For reference, superconducting qubits behave similarly to electrical oscillators
 
 The inductor loop was intentionally left out and will be added later during circuit analysis and simulation.
 
-![Transmon Pocket Qubit](/assets/images/fig2.png)
+![Transmon Pocket Qubit](/assets/images/simulating-a-simple-quantum-circuit-in-qiskit-metal/fig2.png)
 
 *Figure 2 — Transmon Pocket Qubit.*
 
@@ -80,7 +80,7 @@ The **Driven** design helps:
 - Reduce impedance mismatches.
 - Improve pulse transmission fidelity.
 
-![Launchpad Wirebond Driven](/assets/images/fig3.png)
+![Launchpad Wirebond Driven](/assets/images/simulating-a-simple-quantum-circuit-in-qiskit-metal/fig3.png)
 
 *Figure 3 — Launchpad Wirebond Driven.*
 
@@ -92,7 +92,7 @@ The **Launchpad Wirebond Coupled** acts as the output point of the circuit.
 
 Its role is to receive the qubit state information and pass it outside the chip where measurement equipment can process it.
 
-![Launchpad Wirebond Coupled](/assets/images/fig4.png)
+![Launchpad Wirebond Coupled](/assets/images/simulating-a-simple-quantum-circuit-in-qiskit-metal/fig4.png)
 
 *Figure 4 — Launchpad Wirebond Coupled.*
 
