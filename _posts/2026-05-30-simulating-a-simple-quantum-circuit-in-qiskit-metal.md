@@ -5,9 +5,7 @@ date: 2026-05-30
 description: Designing and preparing a simple superconducting quantum circuit for simulation using Qiskit Metal.
 ---
 
-# Simulating a Simple Circuit in Qiskit Metal
-
-**Author:** Yahya Ahmed Azzam
+Yahya Ahmed Azzam
 
 ---
 
