@@ -2,7 +2,6 @@
 layout: post
 title: "Introduction to Transmon Qubits"
 date: 2026-05-30
-image: /assets/images/transmon.png
 description: Understanding why transmons became the dominant superconducting qubit technology.
 category: Quantum Computing
 ---
