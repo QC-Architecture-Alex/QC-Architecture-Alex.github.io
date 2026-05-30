@@ -5,7 +5,7 @@ date: 2026-05-30
 description: Designing and preparing a simple superconducting quantum circuit for simulation using Qiskit Metal.
 ---
 
-Yahya Ahmed Azzam
+**Author:** Yahya Ahmed Azzam
 
 ---
 
@@ -21,15 +21,15 @@ The project intended to simulate a simple circuit in **Qiskit Metal**, but befor
 
 The main idea behind the simulation was to create a system containing a single qubit connected to a Hadamard gate, where the initial state
 
-$$
-|0\rangle
-$$
+{% raw %}
+$$ |0\rangle $$
+{% endraw %}
 
 would be transformed into
 
-$$
-\frac{|0\rangle + |1\rangle}{\sqrt{2}}
-$$
+{% raw %}
+$$ \frac{|0\rangle + |1\rangle}{\sqrt{2}} $$
+{% endraw %}
 
 The overall circuit is shown below.
 
