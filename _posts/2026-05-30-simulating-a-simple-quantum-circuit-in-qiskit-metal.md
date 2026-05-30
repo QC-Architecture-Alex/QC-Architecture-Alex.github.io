@@ -3,7 +3,6 @@ layout: post
 title: "Simulating a Simple Circuit in Qiskit Metal"
 date: 2026-05-30
 description: Designing and preparing a simple superconducting quantum circuit for simulation using Qiskit Metal.
-category: Quantum Computing
 ---
 
 # Simulating a Simple Circuit in Qiskit Metal
