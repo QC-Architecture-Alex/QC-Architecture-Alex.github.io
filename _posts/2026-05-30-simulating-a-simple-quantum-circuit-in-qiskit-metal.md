@@ -21,15 +21,11 @@ The project intended to simulate a simple circuit in **Qiskit Metal**, but befor
 
 The main idea behind the simulation was to create a system containing a single qubit connected to a Hadamard gate, where the initial state
 
-{% raw %}
 $$ |0\rangle $$
-{% endraw %}
 
 would be transformed into
 
-{% raw %}
 $$ \frac{|0\rangle + |1\rangle}{\sqrt{2}} $$
-{% endraw %}
 
 The overall circuit is shown below.
 
