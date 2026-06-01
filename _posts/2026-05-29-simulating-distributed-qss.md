@@ -59,7 +59,6 @@ To establish our baseline, Figure 2 displays the full monolithic $((3,5))$ circu
 ![QSS circuit](/assets/images/qss/qss_circuit.png)
 *Figure 2: The monolithic quantum circuit for the $((3,5))$ QSS scheme [3]. This serves as the theoretical baseline for our distributed implementation.*
 
-While the monolithic model serves as a foundation, our primary research focuses on the distributed implementation using the Diskit framework. Because the circuit depth and topology of the distributed version are highly complex, you can view the optimized, topology-aware version of this circuit here: [Link to Distributed Diskit-Optimized QSS Circuit].
 
 **Design Explanation:**
 
