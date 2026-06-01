@@ -125,3 +125,7 @@ However, it will be worked on in the near future, to present a guide for the upc
 *Tools Used: Qiskit Metal, Python*
 
 *To be Used: Ansys Desktop Student, KLayout*
+
+#### Note:
+
+This blog was formatted using chatgpt.
