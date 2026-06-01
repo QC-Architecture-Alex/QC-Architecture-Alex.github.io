@@ -108,9 +108,9 @@ The numbers in Table 1 tell the story clearly:
 | **Per-group ridge (ours)** | **1×** | **0.083** | **0.007** |
 | ZNE [1,3,5] | 3× | 0.106 | 0.014 |
 | Ridge MS | 3× | **0.038** | **0.004** |
-| CDR k=5 | 11× | 0.038 | 0.025 |
+| CDR per-group k=5 | 11× | 0.038 | 0.025 |
 
-*Table 1. Hamiltonian benchmark results (simple noise). Z-only methods make things worse; multi-basis methods beat ZNE at lower cost.*
+*Table 1. Hamiltonian benchmark results (simple noise). Z-only methods make things worse; multi-basis methods beat ZNE at lower cost. "CDR per-group k=5" trains k=5 near-Clifford circuits per commuting group (2 groups × 5 + 1 target = 11×); Table 2 uses standard single-group CDR where cost = k+1.*
 
 ---
 
@@ -145,7 +145,8 @@ This matches ZNE's 3× circuit cost but gives the model explicit information abo
 | Per-group ridge | 1× | Ours: a separate ridge model per commuting group, each fed features from its own basis; predictions summed. |
 | Ridge MS | 3× | "Multi-scale": per-group ridge with features gathered at three noise levels ($\lambda \in \{1,3,5\}$), matching ZNE's budget. |
 | ZNE | 3× | Zero-noise extrapolation. |
-| CDR ($k$) | 4–11× | Clifford data regression with $k$ near-Clifford reference samples; cost grows with $k$. |
+| CDR ($k$) | 4–6× | Standard Clifford data regression: $k$ near-Clifford circuits plus 1 target run; cost = $k+1$. |
+| CDR per-group ($k$) | up to 11× | CDR applied independently per commuting group; cost = (groups × $k$) + 1. For 2 groups and $k=5$: $2 \times 5 + 1 = 11\times$. |
 
 These are the canonical names used in every table below.
 
@@ -196,7 +197,7 @@ The hardware results confirmed the simulation predictions, and added some surpri
 
 *Table 2. IBM `ibm_marrakesh` results for H₂ at $R = 0.74$ Å. ZNE and CDR were run at 1024 shots only; ridge methods were run at both shot counts.*
 
-**Finding 1**: Simulator-trained ridge weights transfer to the QPU with only 1–2% degradation (1.1% at 1024 shots; 2.2% at 4096 shots, comparing sim-trained vs HW-calibrated ridge). The on-device calibration we thought was mandatory turns out to be unnecessary *for this 2-qubit Hamiltonian*. The qualifier matters: in simulation, training Ridge MS on the simple noise model and applying it to the realistic one degrades 2-qubit H₂ by under 1%, but the 4-qubit Ising chain by **128%** (and 232% in the reverse direction). Coherent errors and $ZZ$ crosstalk reshape the $X$-basis feature–label relationship in a way that simple-noise calibration cannot anticipate, and the effect is far more severe for the larger 4-qubit system. The practical rule that emerges: for $n \geq 4$ qubits with $X$/$Y$ terms, calibrate on the actual device, or fall back to CDR, which adapts per-circuit regardless of the noise model.
+**Finding 1**: On the QPU, sim-trained weights and hardware-calibrated weights give nearly identical results: 0.0265 vs 0.0262 at 1024 shots (1.1% apart), and 0.0235 vs 0.0230 at 4096 shots (2.2% apart). Whether you calibrate on the device or in simulation barely matters *for this 2-qubit Hamiltonian*. Note, however, that at 1024 shots both ridge variants are marginally *worse* than raw noisy (0.026x vs 0.0253); only at 4096 shots do they become net-positive, consistent with the plateau in the calibration learning curve. The qualifier "for this Hamiltonian" matters: in simulation, applying simple-noise-trained weights to the realistic noise model degrades 2-qubit H₂ by under 1%, but the 4-qubit Ising chain by **128%** (and 232% in the reverse direction). Coherent errors and $ZZ$ crosstalk reshape the $X$-basis feature–label relationship in a way that simple-noise calibration cannot anticipate, and the effect is far more severe for the larger 4-qubit system. The practical rule: for $n \geq 4$ qubits with $X$/$Y$ terms, calibrate on the actual device, or fall back to CDR, which adapts per-circuit regardless of the noise model.
 
 **Finding 2**: ZNE is 31% *worse* than uncorrected hardware. The hardware raw MAE of 0.024 sits above the simulator crossover threshold, but the actual ZNE failure is more severe than the simple-noise model predicts: correlated errors, coherent noise, and inter-scale drift all inflate the Richardson extrapolation variance beyond what depolarizing noise alone would produce.
 
@@ -210,13 +211,13 @@ We then traced the full H₂ potential energy surface at five bond lengths ($R =
 
 CDR k=5 achieves a remarkably uniform 58–59% improvement at every geometry, and the correction works regardless of the molecular configuration, which matters because a potential energy surface is only useful if the errors are consistent across it.
 
-Finally, a calibration-set size sweep showed that hardware ridge MAE plateaus by $N \approx 40$ circuits and does not improve further with more data:
+Finally, a calibration-set size sweep showed that hardware ridge MAE oscillates irregularly around the raw baseline from $N=20$ onward, reaching its best at $N=50$ (0.0225, about 8% below raw) with no clear monotonic improvement:
 
 ![Hardware learning curve: ridge MAE vs number of calibration circuits](/assets/img/fig4_hw_lc.png)
 
-*Figure 4. Hardware calibration learning curve on `ibm_marrakesh`. Red shading: ridge worse than raw; green shading: better. The plateau at $N \approx 40$ indicates a model-capacity ceiling, not a data shortage.*
+*Figure 4. Hardware calibration learning curve on `ibm_marrakesh`. Red shading: ridge worse than raw; green shading: better. The erratic oscillation around the raw baseline from $N=20$ onward, rather than steady improvement with more data, is the signature of a ridge-capacity ceiling: the model has extracted what it can from the physics-feature representation.*
 
-This is a **ridge-capacity ceiling**: the linear physics-feature model has extracted all the information these calibration circuits can provide about `ibm_marrakesh`'s noise. Further improvement would need nonlinear models or more hardware-specific calibration circuits.
+This is a **ridge-capacity ceiling**: once the model has enough calibration circuits to estimate the noise map (roughly N=20), adding more data does not systematically improve predictions because the model's linear physics-feature representation has reached its expressive limit. Breaking past it would require nonlinear models or more hardware-specific calibration circuits that probe directions the current feature set cannot resolve.
 
 ### Beyond H₂: 4-qubit Ising on hardware
 
