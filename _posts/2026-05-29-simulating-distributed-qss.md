@@ -6,6 +6,10 @@ categories: [Quantum Computing, Quantum Secret Sharing, Qiskit, Diskit]
 tags: [Quantum Computing, Quantum Secret Sharing, Qiskit, Diskit]
 ---
 
+**Author:** Mariam Hossam
+
+---
+
 In an era of increasingly decentralized networks, secure information distribution is paramount. Classical secret sharing, first introduced by Shamir [1], allows a dealer to divide a secret among $n$ participants such that only a subset of $k$ participants (where $k \le n$) can reconstruct it. However, classical schemes are fundamentally vulnerable to eavesdropping and computational assumptions.
 
 **Quantum Secret Sharing (QSS)** [2] elevates this concept by encoding the secret into quantum states. Relying on the principles of quantum mechanics—specifically entanglement and the no-cloning theorem—QSS guarantees unconditional security. Any attempt by an eavesdropper to intercept a share inherently disturbs the state, revealing the intrusion.
