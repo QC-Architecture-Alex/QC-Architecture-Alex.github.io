@@ -214,7 +214,7 @@ quasi = mit.apply_correction(
 mitigated_probs = quasi.nearest_probability_distribution()
 ```
 
-## 4. Results and Analysis
+## Results and Analysis
 
 To rigorously evaluate our scientific claims, we simulated both the monolithic baseline and the distributed Diskit implementations of the ((3,5)) QSS scheme for 20,000 shots. The circuits were evaluated across all four Qiskit transpilation optimization levels: Level 0 (no optimization), Level 1 (light), Level 2 (medium), and Level 3 (heavy). 
 
