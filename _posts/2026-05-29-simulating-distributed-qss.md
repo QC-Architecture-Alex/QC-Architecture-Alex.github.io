@@ -95,6 +95,7 @@ $$|\Psi_{\text{input}}\rangle = |0\rangle_0 \otimes |0\rangle_1 \otimes |0\rangl
 
 #### Step 1: Secret State Preparation
 At the first barrier, the state remains isolated on the data qubit:
+
 $$|\Psi_1\rangle = i|10000\rangle$$
 
 #### Step 2: Encoding 
