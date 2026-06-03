@@ -79,10 +79,16 @@ In an ideal scenario where all shares are available, the operators cancel out, y
 
 To better understand the intuition behind the circuit design, we will trace a concrete numeric example and demonstrate how the decoded state matches the original secret.
 
-The state vectors are written following the Qiskit little-endian convention: $|q_4 q_3 q_2 q_1 q_0\rangle$.
+The state vectors are written following the Qiskit little-endian convention:
+$|q_4 q_3 q_2 q_1 q_0\rangle$.
 
 
-Let $\theta = \pi$ and $\phi = \pi / 2$. Therefore, the secret state to share is configured as $|\psi\rangle = i|1\rangle$ on the data qubit $q_4$, while all other qubits start in the ground state $|0\rangle$.
+Let 
+$\theta = \pi$
+and
+$\phi = \pi / 2$
+. Therefore, the secret state to share is configured as   $|\psi\rangle = i|1\rangle$   on the data qubit  $q_4$
+, while all other qubits start in the ground state  $|0\rangle$.
 
 
 $$|\Psi_{\text{input}}\rangle = |0\rangle_0 \otimes |0\rangle_1 \otimes |0\rangle_2 \otimes |0\rangle_3 \otimes (i|1\rangle)_4 = i|10000\rangle$$
@@ -135,6 +141,8 @@ $$|\Psi_6\rangle = i|10010\rangle$$
 To find the final state of our recovered secret, we isolate the data qubit $q_4$ from the inactive ancillas ($q_3 = 0, q_2 = 0, q_1 = 1, q_0 = 0$):
 
 $$|\Psi_{\text{reconstructed}}\rangle = \text{State}(q_4) = i|1\rangle$$
+
+
 $$|\Psi_{\text{reconstructed}}\rangle = |\Psi_{\text{input}}\rangle$$
 
 The quantum secret sharing protocol has perfectly preserved and reconstructed the original state despite the complete erasure of shares 0 and 1.
