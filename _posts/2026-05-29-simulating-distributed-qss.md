@@ -81,7 +81,9 @@ To better understand the intuition behind the circuit design, we will trace a co
 
 The state vectors are written following the Qiskit little-endian convention: $|q_4 q_3 q_2 q_1 q_0\rangle$.
 
+
 Let $\theta = \pi$ and $\phi = \pi / 2$. Therefore, the secret state to share is configured as $|\psi\rangle = i|1\rangle$ on the data qubit $q_4$, while all other qubits start in the ground state $|0\rangle$.
+
 
 $$|\Psi_{\text{input}}\rangle = |0\rangle_0 \otimes |0\rangle_1 \otimes |0\rangle_2 \otimes |0\rangle_3 \otimes (i|1\rangle)_4 = i|10000\rangle$$
 
@@ -91,6 +93,7 @@ $$|\Psi_1\rangle = i|10000\rangle$$
 
 #### Step 2: Encoding 
 The encoding network distributes the secret state across a highly entangled 5-qubit graph state. The single state shatters into an equal superposition of 16 basis states, each with an amplitude magnitude of $\frac{1}{4} = 0.25$:
+
 
 $$\begin{aligned}
 |\Psi_2\rangle = -0.25i \big( &|00001\rangle + |00010\rangle + |00100\rangle + |00111\rangle + |01000\rangle + |01110\rangle + |10000\rangle \\
@@ -102,29 +105,35 @@ $$\begin{aligned}
 Qubits $q_0$ and $q_1$ are lost to erasure and replaced with freshly initialized $|0\rangle$ qubits. This forces a collapse into a subspace where the rightmost two qubits ($q_1, q_0$) map directly back to $00$.
 
 Normalizing the remaining 4 valid states yields an amplitude magnitude of $\frac{1}{\sqrt{4}} = 0.5$:
+
 $$|\Psi_3\rangle = -0.5i \big( |00100\rangle + |01000\rangle + |10000\rangle + |11100\rangle \big)$$
 
 #### Step 4: Decoding
 The decoding operations run the inverse encoding sequence on the remaining components. This process successfully untangles the data qubit $q_4$ from the system, gathering the erasure errors onto the syndrome qubits ($q_1, q_0$):
+
 $$|\Psi_4\rangle = 0.5i \big( |10000\rangle + |10001\rangle + |10010\rangle + |10011\rangle \big)$$
 
 Notice that $q_4 = 1$ in all remaining states, meaning the secret phase information is successfully isolated back onto the data channel.
 
 #### Step 5: Mid-Circuit Measurement
 The circuit measures the syndrome qubits $q_3 q_2 q_1 q_0$. Suppose that after measurement, the state projects into a single computational outcome:
+
 $$|\Psi_5\rangle = i|10010\rangle$$
 
 This collapse yields the classical syndrome register value:
+
 $$\text{syn} = q_3 q_2 q_1 q_0 = 0010_2$$
 
 #### Step 6: Feedforward Corrections 
 The conditional lookup logic checks the syndrome value. Because the state vector contains $q_4 = 1$, the secret state on the data qubit is already $i|1\rangle$.
 
 Since no phase or bit-flip error altered the data qubit during this specific erasure path, the syndrome $0010$ maps to an Identity operation ($I$) according to Figure 3. No correction gate is triggered, keeping the state vector completely stable:
+
 $$|\Psi_6\rangle = i|10010\rangle$$
 
 #### Final Reconstructed State
 To find the final state of our recovered secret, we isolate the data qubit $q_4$ from the inactive ancillas ($q_3 = 0, q_2 = 0, q_1 = 1, q_0 = 0$):
+
 $$|\Psi_{\text{reconstructed}}\rangle = \text{State}(q_4) = i|1\rangle$$
 $$|\Psi_{\text{reconstructed}}\rangle = |\Psi_{\text{input}}\rangle$$
 
