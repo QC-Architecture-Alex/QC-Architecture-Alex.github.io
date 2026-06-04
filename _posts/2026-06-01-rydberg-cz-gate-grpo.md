@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "High-Fidelity CZ Gate Optimization via GRPO on Rydberg Neutral Atoms"
-date: 2026-05-30 00:00:00 +0000
+date: 2026-06-01 00:00:00 +0000
 categories: [Quantum Computing, Quantum Optimal Control, Reinforcement Learning, Rydberg Atoms]
 tags: [Quantum Computing, Rydberg, CZ Gate, GRPO, Reinforcement Learning, Quantum Control, QuTiP]
 ---
@@ -392,15 +392,15 @@ In the open-system (Lindblad) setting used in this project, $U_{\text{sim}}$ is 
 
 #### A.2 Decay penalties $\Gamma_p(t)$ and $\Gamma_r(t)$
 
-Because atoms must pass through the short-lived Rydberg state $| r \rangle$ (and in a two-photon drive scheme, through an intermediate excited state $| p \rangle$) to interact, the optimizer must also limit the time each atom spends in those fragile states. The decay penalties are computed as the time-integrated average population of each dangerous state:
+Because atoms must pass through the short-lived Rydberg state $\lvert r \rangle$ (and in a two-photon drive scheme, through an intermediate excited state $\lvert p \rangle$) to interact, the optimizer must also limit the time each atom spends in those fragile states. The decay penalties are computed as the time-integrated average population of each dangerous state:
 
 $$\Gamma_{p,r}(t) = \gamma_{p,r} \int_0^{T_{\text{gate}}} \bar{n}_{p,r}(t)\, dt$$
 
-Here $\bar{n}_{p,r}(t)$ is the ensemble-averaged population of state $| p \rangle$ or $| r \rangle$ at time $t$, obtained from the density matrix $\rho(t)$ as $\bar{n}_r(t) = \operatorname{Tr}[| r\rangle\langle r| \otimes I\, \rho(t)] + \operatorname{Tr}[I \otimes | r\rangle\langle r|\, \rho(t)]$. The rates $\gamma_{p,r}$ are the physical spontaneous emission rates of those states; $\eta_p$ and $\eta_r$ are dimensionless regularization weights that control how strongly the optimizer avoids them.
+Here $\bar{n}_{p,r}(t)$ is the ensemble-averaged population of state $\lvert p \rangle$ or $\lvert r \rangle$ at time $t$, obtained from the density matrix $\rho(t)$ as $\bar{n}_r(t) = \operatorname{Tr}[\lvert r\rangle\langle r\rvert \otimes I\, \rho(t)] + \operatorname{Tr}[I \otimes \lvert r\rangle\langle r\rvert\, \rho(t)]$. The rates $\gamma_{p,r}$ are the physical spontaneous emission rates of those states; $\eta_p$ and $\eta_r$ are dimensionless regularization weights that control how strongly the optimizer avoids them.
 
-The physical intuition is that spontaneous emission from $| r \rangle$ is the dominant decoherence channel in neutral-atom processors. A pulse that achieves the correct unitary but keeps the atoms in $| r \rangle$ for a long time will still suffer high decoherence in practice. By penalizing $\Gamma_r$ directly, the optimizer learns to find pulses that dart in and out of the Rydberg manifold as quickly as possible—the key insight behind the IU-DRL framework of Cai et al. [7], which autonomously discovers an early-cutoff policy by suppressing unnecessary Rydberg-state population.
+The physical intuition is that spontaneous emission from $\lvert r \rangle$ is the dominant decoherence channel in neutral-atom processors. A pulse that achieves the correct unitary but keeps the atoms in $\lvert r \rangle$ for a long time will still suffer high decoherence in practice. By penalizing $\Gamma_r$ directly, the optimizer learns to find pulses that dart in and out of the Rydberg manifold as quickly as possible—the key insight behind the IU-DRL framework of Cai et al. [7], which autonomously discovers an early-cutoff policy by suppressing unnecessary Rydberg-state population.
 
-In the present project, this penalty is implemented implicitly: the Lindblad collapse operators $L_k = \sqrt{\gamma_r}\,| 1\rangle\langle r|$ already subtract probability from $| r \rangle$ at rate $\gamma_r$ during every integration step of `mesolve`, so the fidelity automatically drops whenever the atom spends excess time in $| r \rangle$. The explicit $\Gamma_r$ term makes this dependence transparent and allows weighting it separately from gate infidelity.
+In the present project, this penalty is implemented implicitly: the Lindblad collapse operators $L_k = \sqrt{\gamma_r}\,\lvert 1\rangle\langle r\rvert$ already subtract probability from $\lvert r \rangle$ at rate $\gamma_r$ during every integration step of `mesolve`, so the fidelity automatically drops whenever the atom spends excess time in $\lvert r \rangle$. The explicit $\Gamma_r$ term makes this dependence transparent and allows weighting it separately from gate infidelity.
 
 #### A.3 Gate time penalty $\lambda\, T_{\text{gate}}$
 
@@ -424,11 +424,11 @@ The Lindblad master equation is the standard framework for describing the time e
 
 #### B.1 Why a density matrix instead of a state vector
 
-For a perfectly isolated quantum system, the state is a vector $| \psi \rangle$ in Hilbert space. For a system that interacts with an environment, the state of the system alone cannot be represented as a pure vector—it is a statistical mixture of possible quantum states. The **density matrix** $\rho$ captures both cases:
+For a perfectly isolated quantum system, the state is a vector $\lvert \psi \rangle$ in Hilbert space. For a system that interacts with an environment, the state of the system alone cannot be represented as a pure vector—it is a statistical mixture of possible quantum states. The **density matrix** $\rho$ captures both cases:
 
-$$\rho = \sum_i p_i | \psi_i \rangle\langle \psi_i |, \qquad \operatorname{Tr}(\rho) = 1, \qquad \rho \geq 0$$
+$$\rho = \sum_i p_i \lvert \psi_i \rangle\langle \psi_i \rvert, \qquad \operatorname{Tr}(\rho) = 1, \qquad \rho \geq 0$$
 
-The diagonal entries $\rho_{ii}$ give the probability of finding the system in basis state $| i \rangle$. The off-diagonal entries $\rho_{ij}$ ($i \neq j$) are **coherences**: they encode quantum superposition. When the environment disturbs the system, coherences decay—a process called **decoherence**. The density matrix tracks this decay explicitly; a pure state vector cannot.
+The diagonal entries $\rho_{ii}$ give the probability of finding the system in basis state $\lvert i \rangle$. The off-diagonal entries $\rho_{ij}$ ($i \neq j$) are **coherences**: they encode quantum superposition. When the environment disturbs the system, coherences decay—a process called **decoherence**. The density matrix tracks this decay explicitly; a pure state vector cannot.
 
 #### B.2 The equation
 
@@ -446,7 +446,7 @@ The structure of the dissipator $L_k \rho L_k^\dagger - \frac{1}{2}L_k^\dagger L
 
 #### B.3 Solution in this project
 
-QuTiP's `mesolve` function integrates this equation numerically over 200 time steps for each of the four computational basis states $| 00\rangle, | 01\rangle, | 10\rangle, | 11\rangle$. The result is four density matrices $\rho_{\text{out}}^{(i)}(T_{\text{gate}})$, one per input state, which are then fed into the fidelity calculation described in Appendix C.
+QuTiP's `mesolve` function integrates this equation numerically over 200 time steps for each of the four computational basis states $\lvert 00\rangle, \lvert 01\rangle, \lvert 10\rangle, \lvert 11\rangle$. The result is four density matrices $\rho_{\text{out}}^{(i)}(T_{\text{gate}})$, one per input state, which are then fed into the fidelity calculation described in Appendix C.
 
 ---
 
@@ -454,27 +454,27 @@ QuTiP's `mesolve` function integrates this equation numerically over 200 time st
 
 #### C.1 The problem with testing one state
 
-Measuring a quantum gate by running it on a single input state and checking the output is insufficient. A gate that perfectly maps $| 00\rangle \to | 00\rangle$ might still be completely broken for inputs like $| ++\rangle = (| 00\rangle + | 01\rangle + | 10\rangle + | 11\rangle)/2$ (a superposition). To certify a gate, you need to know how it performs on *all* possible inputs simultaneously.
+Measuring a quantum gate by running it on a single input state and checking the output is insufficient. A gate that perfectly maps $\lvert 00\rangle \to \lvert 00\rangle$ might still be completely broken for inputs like $\lvert{++}\rangle = (\lvert 00\rangle + \lvert 01\rangle + \lvert 10\rangle + \lvert 11\rangle)/2$ (a superposition). To certify a gate, you need to know how it performs on *all* possible inputs simultaneously.
 
 #### C.2 The Choi–Jamiołkowski isomorphism
 
 The Choi–Jamiołkowski (CJ) isomorphism is an exact mathematical correspondence between a quantum operation (a map from density matrices to density matrices) and a single density matrix called the **Choi state**. It works by running the quantum process on one half of a maximally entangled state:
 
-$$| \Phi^+ \rangle = \frac{1}{d} \sum_{i=0}^{d-1} | i \rangle \otimes | i \rangle$$
+$$\lvert \Phi^+ \rangle = \frac{1}{d} \sum_{i=0}^{d-1} \lvert i \rangle \otimes \lvert i \rangle$$
 
-The Choi state of a process $\mathcal{E}$ is $\chi_\mathcal{E} = (\mathcal{I} \otimes \mathcal{E})|\Phi^+\rangle\langle\Phi^+|$—you apply the process to one half of the entangled pair and leave the other half untouched. The result encodes the full behavior of $\mathcal{E}$ on all inputs at once, because the entangled pair "probes" all input states simultaneously.
+The Choi state of a process $\mathcal{E}$ is $\chi_\mathcal{E} = (\mathcal{I} \otimes \mathcal{E})\lvert\Phi^+\rangle\langle\Phi^+\rvert$—you apply the process to one half of the entangled pair and leave the other half untouched. The result encodes the full behavior of $\mathcal{E}$ on all inputs at once, because the entangled pair "probes" all input states simultaneously.
 
 #### C.3 Process fidelity and average gate fidelity
 
 The **process fidelity** between the ideal gate $U_{\text{CZ}}$ and the simulated noisy process $\mathcal{E}$ is:
 
-$$F_{\text{process}} = \langle \Phi^+_{\text{CZ}} | \chi_\mathcal{E} | \Phi^+_{\text{CZ}} \rangle$$
+$$F_{\text{process}} = \langle \Phi^+_{\text{CZ}} \vert \chi_\mathcal{E} \vert \Phi^+_{\text{CZ}} \rangle$$
 
-where $|\Phi^+_{\text{CZ}}\rangle$ is the Choi state of the ideal unitary. In practice this is computed as:
+where $\lvert\Phi^+_{\text{CZ}}\rangle$ is the Choi state of the ideal unitary. In practice this is computed as:
 
 $$F_{\text{process}} = \frac{1}{d} \sum_{i=0}^{d-1} \operatorname{Tr}\!\left[ \rho_{\text{ideal}}^{(i)} \cdot \rho_{\text{out}}^{(i)} \right]$$
 
-where $\rho_{\text{ideal}}^{(i)} = U_{\text{CZ}} | i\rangle\langle i| U_{\text{CZ}}^\dagger$ is what the ideal gate would produce from basis state $| i\rangle$, and $\rho_{\text{out}}^{(i)}$ is what the noisy simulation actually produces. The sum over all $d = 4$ basis states is what makes this a full process characterization rather than a single-input test.
+where $\rho_{\text{ideal}}^{(i)} = U_{\text{CZ}} \lvert i\rangle\langle i\rvert U_{\text{CZ}}^\dagger$ is what the ideal gate would produce from basis state $\lvert i\rangle$, and $\rho_{\text{out}}^{(i)}$ is what the noisy simulation actually produces. The sum over all $d = 4$ basis states is what makes this a full process characterization rather than a single-input test.
 
 The quantity $\operatorname{Tr}[\rho_{\text{ideal}} \cdot \rho_{\text{out}}]$ is the **Hilbert–Schmidt inner product** between two density matrices. It equals 1 when they are identical and 0 when they are orthogonal (completely different quantum states).
 
