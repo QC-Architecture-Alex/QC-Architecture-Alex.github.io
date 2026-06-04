@@ -15,10 +15,67 @@ Quantum computers today are noisy. Every gate misfires a little; every qubit los
 
 Full quantum error correction exists, but it is expensive: it demands hundreds of physical qubits per logical qubit and has not yet reached the scale needed for useful chemistry. The near-term alternative is **quantum error mitigation (QEM)**, a set of classical post-processing tricks that squeeze more accurate expectation values out of noisy raw data, at the cost of more circuit executions rather than more qubits. Throughout, we quote that overhead as a multiplier: **N×** means N circuit executions per estimate, relative to running the bare circuit once, so the uncorrected baseline is 1×.
 
-Two methods dominate the literature:
+Two methods dominate the literature.
 
-- **Zero-Noise Extrapolation (ZNE)**: run the same circuit at several deliberately amplified noise levels (by "folding" gates), then extrapolate the measurements back to zero noise. Simple in principle, 3× the circuit cost.
-- **Clifford Data Regression (CDR)** exploits a quirk: a special family of gates (the *Clifford* gates: H, S, CNOT) is classically simulable, because their states need only $O(n^2)$ bits rather than $2^n$ amplitudes; the hard part of any circuit is the *non-Clifford* gates, the "off-grid" rotations whose angle isn't a multiple of $\pi/2$. CDR snaps each off-grid rotation to the nearest $\pi/2$ multiple, giving a *near-Clifford* circuit that is almost the original but now cheap to simulate exactly. Simulation provides a clean reference label; the same circuit run on hardware provides the noisy value. Fit a noisy-to-exact corrector across those $k$ circuit pairs and apply it to the original. Typically 11× the circuit cost, growing with $k$.
+**Zero-Noise Extrapolation (ZNE)** [1,2] amplifies the circuit noise deliberately at several scaling factors $\lambda$, then extrapolates the measured expectation values back to $\lambda = 0$. The amplification uses **gate folding**: any unitary $G$ is replaced by $G G^\dagger G$. Since $G^\dagger G = I$, the logical circuit is unchanged, but the gate now executes three times on hardware, tripling its noise contribution. Running at $\lambda \in \{1, 3, 5\}$ gives three data points; Richardson extrapolation fits a polynomial through them and evaluates it at $\lambda = 0$:
+
+$$\langle O \rangle_{\lambda=0} \approx \frac{15}{8}\langle O \rangle_1 - \frac{5}{4}\langle O \rangle_3 + \frac{3}{8}\langle O \rangle_5.$$
+
+*Example.* If a noisy circuit gives $\langle Z \rangle_1 = 0.75$, $\langle Z \rangle_3 = 0.55$, and $\langle Z \rangle_5 = 0.35$, then $\tfrac{15}{8}(0.75) - \tfrac{5}{4}(0.55) + \tfrac{3}{8}(0.35) = 0.85$. When noise scales exactly linearly with $\lambda$, Richardson extrapolation removes the leading error term exactly. Total cost: 3×, one circuit run per noise level.
+
+<figure style="text-align:center; margin: 1.5em 0;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 265" width="100%" style="max-width:480px; display:block; margin:0 auto; font-family:sans-serif; font-size:13px;">
+  <rect x="60" y="20" width="360" height="200" fill="#fafafa" stroke="#ddd"/>
+  <rect x="60" y="20" width="72" height="200" fill="#e8f5e9"/>
+  <text x="96" y="254" text-anchor="middle" fill="#388e3c" font-size="11" font-style="italic">extrap.</text>
+  <line x1="60" y1="60" x2="420" y2="60" stroke="#e8e8e8"/>
+  <line x1="60" y1="100" x2="420" y2="100" stroke="#e8e8e8"/>
+  <line x1="60" y1="140" x2="420" y2="140" stroke="#e8e8e8"/>
+  <line x1="60" y1="180" x2="420" y2="180" stroke="#e8e8e8"/>
+  <line x1="60" y1="220" x2="420" y2="220" stroke="#444" stroke-width="1.5"/>
+  <line x1="60" y1="20" x2="60" y2="220" stroke="#444" stroke-width="1.5"/>
+  <line x1="60" y1="220" x2="60" y2="226" stroke="#444"/><text x="60" y="240" text-anchor="middle" fill="#555">0</text>
+  <line x1="132" y1="220" x2="132" y2="226" stroke="#444"/><text x="132" y="240" text-anchor="middle" fill="#555">1</text>
+  <line x1="204" y1="220" x2="204" y2="226" stroke="#444"/><text x="204" y="240" text-anchor="middle" fill="#555">2</text>
+  <line x1="276" y1="220" x2="276" y2="226" stroke="#444"/><text x="276" y="240" text-anchor="middle" fill="#555">3</text>
+  <line x1="348" y1="220" x2="348" y2="226" stroke="#444"/><text x="348" y="240" text-anchor="middle" fill="#555">4</text>
+  <line x1="420" y1="220" x2="420" y2="226" stroke="#444"/><text x="420" y="240" text-anchor="middle" fill="#555">5</text>
+  <text x="240" y="260" text-anchor="middle" fill="#333">noise amplification factor &#955;</text>
+  <line x1="54" y1="20" x2="60" y2="20" stroke="#444"/><text x="50" y="24" text-anchor="end" fill="#555">1.0</text>
+  <line x1="54" y1="60" x2="60" y2="60" stroke="#444"/><text x="50" y="64" text-anchor="end" fill="#555">0.8</text>
+  <line x1="54" y1="100" x2="60" y2="100" stroke="#444"/><text x="50" y="104" text-anchor="end" fill="#555">0.6</text>
+  <line x1="54" y1="140" x2="60" y2="140" stroke="#444"/><text x="50" y="144" text-anchor="end" fill="#555">0.4</text>
+  <line x1="54" y1="180" x2="60" y2="180" stroke="#444"/><text x="50" y="184" text-anchor="end" fill="#555">0.2</text>
+  <line x1="60" y1="50" x2="420" y2="50" stroke="#43a047" stroke-width="1.2" stroke-dasharray="5,4"/>
+  <text x="425" y="54" fill="#388e3c" font-size="11" text-anchor="start">ideal</text>
+  <line x1="60" y1="50" x2="420" y2="150" stroke="#1e88e5" stroke-width="2" stroke-dasharray="7,4" opacity="0.85"/>
+  <circle cx="132" cy="70" r="6" fill="#e53935" stroke="white" stroke-width="1.5"/>
+  <text x="141" y="64" fill="#c62828" font-size="11">0.75</text>
+  <circle cx="276" cy="110" r="6" fill="#e53935" stroke="white" stroke-width="1.5"/>
+  <text x="285" y="104" fill="#c62828" font-size="11">0.55</text>
+  <circle cx="420" cy="150" r="6" fill="#e53935" stroke="white" stroke-width="1.5"/>
+  <text x="428" y="144" fill="#c62828" font-size="11">0.35</text>
+  <circle cx="60" cy="50" r="8" fill="#43a047" stroke="#1b5e20" stroke-width="2"/>
+  <text x="70" y="44" fill="#1b5e20" font-size="11" font-weight="bold">0.85</text>
+  <circle cx="175" cy="32" r="5" fill="#e53935"/>
+  <text x="184" y="36" fill="#555" font-size="11">measured (&#955; = 1, 3, 5)</text>
+  <circle cx="320" cy="32" r="7" fill="#43a047" stroke="#1b5e20" stroke-width="1.5"/>
+  <text x="331" y="36" fill="#555" font-size="11">ZNE estimate</text>
+</svg>
+<figcaption style="font-size:0.85em; color:#666; margin-top:0.4em;">
+<strong>ZNE in action.</strong> Red dots are expectation values measured at noise-amplification factors &#955; = 1, 3, 5. The blue dashed line is the linear model fit. Extrapolating to &#955; = 0 (green dot) recovers 0.85, matching the ideal value (green dashed). The green-shaded region is the extrapolation zone; no circuits are run there.
+</figcaption>
+</figure>
+
+**Clifford Data Regression (CDR)** [3] exploits a classically simulable subset of quantum gates: the *Clifford* gates (H, S, CNOT), whose states need only $O(n^2)$ bits rather than $2^n$ amplitudes. The hard gates in any variational circuit are the *non-Clifford* rotations whose angle $\theta$ is not a multiple of $\pi/2$. CDR snaps each such rotation to the nearest $\pi/2$ multiple, converting it to the nearest Clifford gate:
+
+| Gate in target circuit | Nearest Clifford | Approximation |
+|---|---|---|
+| $R_z(1.2)$ | $S = R_z(\pi/2)$ | 69° → 90° |
+| $R_z(2.8)$ | $Z = R_z(\pi)$ | 160° → 180° |
+| $R_z(0.4)$ | $I = R_z(0)$ | 23° → 0° |
+
+The resulting *near-Clifford* circuit is almost the original but can be simulated exactly on a classical computer via the Gottesman–Knill stabilizer formalism. Simulation gives the exact reference label; running the same snapped circuit on hardware gives the noisy label. Repeat for $k$ randomly snapped variants, train a linear corrector on the $k$ noisy→exact pairs, and apply it to the original target. Cost: $k + 1$ circuit executions (typically $k = 5$–10, so 6–11×).
 
 More recently, **machine-learning approaches** have emerged: train a single global model on a pool of calibration circuits, then apply it to every new circuit without any extra quantum overhead. The state-of-the-art version from Strikis et al. and Lowe et al. uses "physics features" (a compact $O(n^2)$-dimensional summary of the measurement statistics) as inputs to a ridge regression model.
 
@@ -223,19 +280,19 @@ This is a **ridge-capacity ceiling**: once the model has enough calibration circ
 
 Everything above used the 2-qubit H₂ Hamiltonian. To check that the method scales past a single small chemistry problem, we ran the same protocol on the 4-qubit transverse-field Ising chain at three field ratios $h/J \in \{0.5, 1.0, 2.0\}$ (240 circuits, 68 s QPU, sharing one circuit pool across all three).
 
-| $h/J$ | Raw | Ridge HW-cal | Ridge sim | CDR k=5 |
+| $h/J$ | Raw | Per-group ridge HW-cal | Per-group ridge sim | CDR k=5 |
 |---|---|---|---|---|
 | 0.5 (ZZ-dominated) | 0.120 | **0.069** | 0.086 | 0.072 |
 | 1.0 | 0.148 | 0.118 | 0.119 | **0.097** |
 | 2.0 (X-dominated) | 0.217 | 0.223 ⚠️ | 0.201 | **0.159** |
 | **Mean** | 0.162 | 0.137 | 0.135 | **0.109** |
 
-*Table 3. 4-qubit Ising on `ibm_marrakesh` (1024 shots, 30-circuit calibration). Bold marks the best method per row; ⚠️ marks a method worse than raw.*
+*Table 3. 4-qubit Ising on `ibm_marrakesh` (1024 shots, 30-circuit calibration). Both ridge variants are per-group multi-basis. Bold marks the best method per row; ⚠️ marks a method worse than raw.*
 
 The Ising results are messier than H₂, and that is informative:
 
-- **Ridge has a genuine hardware failure mode.** At $h/J = 2.0$, where the $X$-field dominates, HW-calibrated ridge (0.223) is actually *worse than doing nothing* (0.217). This is the first hardware confirmation of the X-dominated failure the realistic-noise depth sweep had predicted, and notably the simpler sim-trained weights (0.201) are *more robust* here than the over-fit 30-circuit hardware calibration.
-- **But ridge can also win outright.** At $h/J = 0.5$, where the ground state is $ZZ$-dominated and the noisy-to-ideal map stays nearly linear, ridge HW-cal (0.069) beats CDR k=5 (0.072), the first hardware case where a learned model is the single best method.
+- **Per-group ridge has a genuine hardware failure mode.** At $h/J = 2.0$, where the $X$-field dominates, per-group ridge HW-cal (0.223) is actually *worse than doing nothing* (0.217). This is the first hardware confirmation of the X-dominated failure the realistic-noise depth sweep had predicted, and notably the simpler sim-trained weights (0.201) are *more robust* here than the over-fit 30-circuit hardware calibration.
+- **But per-group ridge can also win outright.** At $h/J = 0.5$, where the ground state is $ZZ$-dominated and the noisy-to-ideal map stays nearly linear, per-group ridge HW-cal (0.069) beats CDR k=5 (0.072), the first hardware case where a learned model is the single best method.
 - **CDR k=5 is the most robust overall** (mean 0.109, 32% better than raw), though its advantage here is smaller than on H₂ (58%), because the 4-qubit problem has a larger Hamiltonian range and deeper state-prep circuits.
 
 The ridge-vs-CDR choice is **problem-dependent, not universal**. Ridge wins when the noise map is approximately linear and the calibration set samples it well; CDR wins when the linear range breaks down or calibration data is scarce. And the per-group ridge failure mode is not a simulator artifact; it shows up on real hardware, in exactly the regime the simulator flagged.
@@ -291,3 +348,4 @@ The broader message is that mitigation choice depends sharply on the noise regim
 5. A. Lowe et al., "Unified approach to data-driven quantum error mitigation," *Physical Review Research* 3, 033098 (2021).
 6. Qiskit contributors, "Qiskit: An Open-source Framework for Quantum Computing" (2023).
 7. Q. Sun et al., "PySCF: the Python-based simulations of chemistry framework," *WIREs Computational Molecular Science* 8, e1340 (2018).
+8. Z. Cai, R. Babbush, S. C. Benjamin, S. Endo, W. J. Huggins, Y. Li, J. R. McClean, T. E. O'Brien, "Quantum Error Mitigation," *Reviews of Modern Physics* 95, 045005 (2023). arXiv:2210.00921.
