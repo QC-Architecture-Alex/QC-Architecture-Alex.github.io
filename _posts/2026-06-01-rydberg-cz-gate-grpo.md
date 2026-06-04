@@ -349,6 +349,7 @@ The noise-assisted optimization finding warrants caution. A pulse whose fidelity
 GRAPE's poor ideal-dynamics performance does not condemn classical methods: it reflects a limitation of *numerical* GRAPE specifically. Analytic GRAPE with exact propagator derivatives computed via the Choi–Khatri formalism for open systems would likely perform significantly better and at a fraction of the wall time. A fair comparison would require that implementation.
 
 The three-atom CCZ scaling result is promising but the comparison is not clean: a CCZ gate requires a three-body interaction that does not arise as naturally from the two-atom blockade Hamiltonian as a CZ does. The Hamiltonian model may need extension—for example, using a mediator atom or a multi-step pulse sequence—for the CCZ to be physically realizable at high fidelity.
+
 ---
 
 ## 6. Conclusion
