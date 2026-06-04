@@ -408,13 +408,6 @@ The simplest term: a linear penalty proportional to the total gate duration. A l
 
 The physical motivation is twofold. First, shorter gates reduce the total exposure time to all decoherence channels, not just Rydberg decay. Second, faster gates allow more operations within the coherence time of the surrounding quantum circuit.
 
-#### A.4 Connection to the GRPO reward
-
-In the GRPO framework, the agent maximizes a shaped reward rather than minimizing a cost. The reward used in this project,
-
-$$R(F) = F^\alpha + B \cdot F \cdot \mathbf{1}[F \geq 0.995]$$
-
-maps onto $\mathcal{J}$ via $R \approx 1 - \mathcal{J}$ at high fidelity. The $F^4$ shaping amplifies the gradient near $F = 1$ (where $1 - \mathcal{I}_{\text{gate}}$ is large) and compresses it near $F = 0$ (where most of the loss is irrecoverable anyway). The bonus term creates a hard cliff at the fault-tolerance threshold, providing the same role as the regularization weights $\eta_{p,r}$ and $\lambda$: it tells the agent which region of the solution space is physically acceptable.
 
 ---
 
