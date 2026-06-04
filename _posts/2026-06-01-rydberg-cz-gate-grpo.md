@@ -349,13 +349,6 @@ The noise-assisted optimization finding warrants caution. A pulse whose fidelity
 GRAPE's poor ideal-dynamics performance does not condemn classical methods: it reflects a limitation of *numerical* GRAPE specifically. Analytic GRAPE with exact propagator derivatives computed via the Choi–Khatri formalism for open systems would likely perform significantly better and at a fraction of the wall time. A fair comparison would require that implementation.
 
 The three-atom CCZ scaling result is promising but the comparison is not clean: a CCZ gate requires a three-body interaction that does not arise as naturally from the two-atom blockade Hamiltonian as a CZ does. The Hamiltonian model may need extension—for example, using a mediator atom or a multi-step pulse sequence—for the CCZ to be physically realizable at high fidelity.
-
-### Broader implications
-
-This project is a data point in the larger question of which ML techniques from the LLM and RL world transfer cleanly to quantum control. The GRPO transfer worked here because of a specific property match: the episodic structure (one pulse = one episode), a bounded continuous action space, and the "reward is noisy but relative ranking is stable" property. Not all quantum control problems share these features, so the translation will not always be this clean.
-
-What the group evaluation philosophy generalizes to is any optimization problem where absolute reward signals are unreliable but relative rankings within a batch are stable. This is plausibly true for other quantum hardware tasks: readout calibration, crosstalk mitigation, pulse calibration on superconducting circuits—all situations where individual evaluations are expensive and stochastic.
-
 ---
 
 ## 6. Conclusion
@@ -370,7 +363,8 @@ This project built a complete pipeline for Rydberg CZ gate optimization: first-p
 
 4. **GRPO slightly outperforms PPO in early convergence.** Both reach similar final fidelities, but GRPO's group-relative advantage is a stronger signal in early training when a critic would still be poorly initialized. The critic-free design also simplifies the implementation.
 
-5. **Laser phase noise is the dominant noise channel.** Rydberg decay, pure dephasing, and Doppler contribute negligibly by comparison. The optimizer has partially learned to use phase noise constructively—a noise-assisted optimization effect that is real but warrants caution.
+---
+
 ## Appendix
 
 ### A. The Full Optimization Cost Function
