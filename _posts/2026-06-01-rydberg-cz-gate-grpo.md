@@ -9,14 +9,17 @@ tags: [Quantum Computing, Rydberg, CZ Gate, GRPO, Reinforcement Learning, Quantu
 **Author:** Ahmed Samir
 
 ---
+## 1. Abstract
 
-## 1. Problem Definition
+Neutral atom processors is an advanced quantum computing platform that uses atoms to simulates the qubits. The interaction between these qubits is operate when exciting an atom by applying laser pulses on this atom, which make it influence the state of its neighbor atoms. Unlike the ideal systems, the real system exposed to noise and decoherence such as thermal fluctuations and electromagnetic interference, which make the "interaction between qubits" fidelity of the gate operation is not perfect. To solve this problem, the normal crafted pulse shape is not enough, and we need to optimize the pulse shape to make it more robust against noise and decoherence. In this project, I implement a reinforcement learning algorithm called Group Relative Policy Optimization (GRPO) to optimize the pulse shape for a two-qubit CZ gate in a Rydberg system. The results show that GRPO can find a pulse shape that achieves a fidelity of 99.99% under realistic noise conditions. This project demonstrates the potential of using machine learning techniques to optimize quantum control problems in noisy environments.
 
-### The Physical System
+## 2. Background
+
+### What is the Neutral Atom Processor?
 
 Neutral Atom Processors is a an advanced quantum computing platform that uses array of atoms trapped in optical tweezers as qubits.
 The interaction between this qubits is operate when exciting the atoms to Rydberg states by applying laser pulses that match the energy required to transition from the ground state to the excited Rydberg state. 
-The Rydberg blockade is a phenomenon occurs when on atom is excited to Rydberg state, it shifts the energy levels of nearby atoms, preventing them from being excited to the Rydberg state. This allows for the implementation of two-qubit gates, such as the CZ gate, by controlling the excitation of one atom based on the state of another.
+
 ![Neutral atom processor](/assets/images/rydberg-grpo/neutral_atom_processor.png)
 ![Optical tweezers](/assets/images/rydberg-grpo/optical_tw.png)
 
@@ -34,11 +37,11 @@ In the ground states $\vert 0 \rangle$ and $\vert 1 \rangle$, the atom's outer m
 ### The Target Gate
 
 
-I decide to choose to implement a Controlled-Z (CZ) gate. The CZ gate is a fundamental two-qubit gate that applies a phase flip to the |11⟩ state while leaving the other states unchanged.
+I decide to choose to implement a Controlled-Z (CZ) gate. The CZ gate is a fundamental two-qubit gate that applies a phase flip to the $\vert 11 \rangle$ state while leaving the other states unchanged.
 
 $$U_\text{CZ} = \text{diag}(1,\, 1,\, 1,\, -1)$$
 
-
+![CZ gate](/assets/images/rydberg-grpo/cz_gate.png)
 
 ### The Rydberg Blockade
 
@@ -48,21 +51,20 @@ $$E_\text{eff} = E_\text{Laser} + E_\text{blockade}$$
 
 So, if the laser need to excite the atom to $\vert r \rangle$ is $E_\text{Laser}$, it will need $E_\text{Laser} + E_\text{blockade}$ to excite the same atom if its neighbor is already in $\vert r \rangle$. Since $E_\text{blockade}$ is much larger than the laser linewidth, so that the state $\vert rr \rangle$ is effectively forbidden. This conditional suppression is the Rydberg blockade, and it is the entire physical basis for the two qubit interaction.
 
-### The Three Pulse CZ Protocol
 
-The blockade turns into a CZ gate through a sequence of three laser pulses. The following derivation tracks every basis state through the protocol, including the phase compensation step required to reach the standard CZ form. A detailed explaination of this protocol is given in the Bloqade.jl documentation [6].
+The blockade turns into a CZ gate through a sequence of laser pulses. A detailed explaination of this is given in the Bloqade.jl documentation [6].
 
-#### Laser pulse rules
+<!-- #### Laser pulse rules
 
 Two types of pulses are used, both tuned to drive the $\vert 1 \rangle \leftrightarrow \vert r \rangle$ transition. Lasers are targeted: a pulse aimed at one atom has no effect on the other. Crucially, lasers only couple to $\vert 1 \rangle$, that is an atom in $\vert 0 \rangle$ is always unaffected.
 
 - $\pi$ pulse on atom $i$: drives the atom halfway through a Rabi cycle, $\vert 1 \rangle \rightarrow \vert r \rangle$ or $\vert r \rangle \rightarrow \vert 1 \rangle$. No phase is accumulated.
-- $2\pi$ pulse on atom $i$: drives the atom through a *complete* Rabi cycle, $\vert 1 \rangle \rightarrow \vert r \rangle \rightarrow \vert 1 \rangle$. Completing a full loop injects a phase factor of $e^{i\pi} = -1$, so the state picks up a global minus sign:
+- $2\pi$ pulse on atom $i$: drives the atom through a *complete*  cycle, $\vert 1 \rangle \rightarrow \vert r \rangle \rightarrow \vert 1 \rangle$. Completing a full loop injects a phase factor of $e^{i\pi} = -1$, so the state picks up a global minus sign:
 
 $$\vert 1 \rangle \xrightarrow{2\pi} -\vert 1 \rangle$$
 
 
-#### State-by-state tracking
+#### State by state tracking
 
 State $\vert 00 \rangle$:  
 Pulse 1: Control is $\vert 0 \rangle$:  ignored. State: $\vert 00 \rangle$.  
@@ -109,80 +111,84 @@ This is not a CZ gate yet. The $\vert 01 \rangle$ and $\vert 10 \rangle$ states 
 
 After compensation, the transformation is exactly the CZ gate:
 
-$$\vert 00 \rangle \rightarrow \vert 00 \rangle, \quad \vert 01 \rangle \rightarrow \vert 01 \rangle, \quad \vert 10 \rangle \rightarrow \vert 10 \rangle, \quad \vert 11 \rangle \rightarrow -\vert 11 \rangle$$
+$$\vert 00 \rangle \rightarrow \vert 00 \rangle, \quad \vert 01 \rangle \rightarrow \vert 01 \rangle, \quad \vert 10 \rangle \rightarrow \vert 10 \rangle, \quad \vert 11 \rangle \rightarrow -\vert 11 \rangle$$ -->
 
 
 
-### The Optimization Problem
+## 3. The Optimization Problem and Laser pulse Discritization
 
 The analytical three pulse protocol described above achieves a CZ gate under ideal conditions. In practice, real laser pulses are not perfect square waves they have finite rise times, fluctuating intensities, and phase noise. Atoms sit in a noisy thermal environment. Therefore the goal of this project is to learn a single continuous laser pulse $\Omega(t)$ that implements the same gate robustly, without being constrained to the discrete three step structure.
 
-The control problem is: for a fixed gate time $T$, find a laser pulse envelope $\Omega(t)$ such that the resulting quantum process is as close as possible to the ideal CZ gate. As the laser pulse is a continous signal, it is parameterized as a piecewise constant sequence of $N = 20$ amplitude segments, each normalized to $[0, 1]$ and scaled by $\Omega_\text{max}$. This gives a 20-dimensional continuous action space:
+The gate time is the time duration to execute the entire pulse sequence to create the CZ gate. We choose $T = 0.5\,\mu$s, which is a typical timescale for Rydberg gates that balances speed and noise. As if we increase the gate time, the system is exposed to noise for longer, which can reduce fidelity. If we decrease the gate time, we may not have enough time to implement the necessary dynamics to achieve a high fidelity CZ gate.
+
+
+The control problem is: for a fixed gate time $T = 0.5\,\mu$s, find a laser pulse envelope $\Omega(t)$ such that the resulting quantum process is as close as possible to the ideal CZ gate. 
+
+As the laser pulse is a continous signal we need to discretize it, so it is parameterized as a piecewise constant sequence of $N$ amplitude segments, and we choose $N = 20$ (assumtion for simpler computation), each normalized to $[0, 1]$ and scaled by $\Omega_\text{max}$. This gives a 20-dimensional continuous action space:
 
 $$\mathbf{u} = (u_i)_{i=1}^{20} \quad \text{where} \quad 0 \le u_i \le 1 \text{ for all } i \in \{1, 2, \dots, 20\}$$
 
 So that the final amplitude at time $t$ is $\Omega(t) = \Omega_\text{max} \cdot u_i$ for $t \in [(i-1)\frac{T}{N}, i\frac{T}{N})$. 
 
-The optimization objective is to maximize the average gate fidelity $F(\mathbf{u})$ under this noisy environment, where the fidelity is the overlap between the noisy quantum process generated by $\Omega(t)$ and the ideal CZ unitary.
+The optimization objective is to maximize the average gate fidelity $F(\mathbf{u})$ under this noisy environment, where the fidelity is the overlap between the noisy quantum process generated by $\Omega(t)$ and the ideal CZ unitary [7].
 
 $$\text{maximize} \quad F(\mathbf{u}) \quad \text{subject to} \quad \mathbf{u}$$
 
 ---
 
-## 2. Simulation Model
+## 3. Simulation Model
 
 
 
 ### The Hamiltonian
 
-
-We can model the two atom system with the following time dependent Hamiltonian in the rotating frame of the laser:
+We can model the two atom system with the following time dependent Hamiltonian in the rotating frame of the laser [6]:
 
 $$H(t) = \sum_{i \in \{A,B\}} \left[ \frac{\Omega(t)}{2} \left( \vert r \rangle\langle 1 \vert_i + \vert 1 \rangle\langle r \vert_i \right) - \Delta(t)  \right] + U_\text{eff} \vert rr \rangle\langle rr \vert$$
 
 The three terms are:
 
-1. **The drive term** ($\Omega(t)/2 \cdot \sigma_{r1} + \text{h.c.}$): the laser couples $\vert 1 \rangle$ and $\vert r \rangle$ with Rabi frequency $\Omega(t)$. The operator $\vert r \rangle\langle 1 \vert$ promotes an atom from $\vert 1 \rangle$ to $\vert r \rangle$ and its conjugate does the reverse. Together they produce coherent oscillation (Rabi flopping) between the two levels. This term acts independently on both atoms A and B.
+1. **The drive term**: the laser couples $\vert 1 \rangle$ and $\vert r \rangle$ with amplitude $\Omega(t)$. The operator $\vert r \rangle\langle 1 \vert$ promotes an atom from $\vert 1 \rangle$ to $\vert r \rangle$ and its conjugate does the reverse. This term acts independently on both atoms A and B.
 
-2. **The detuning term** ($-\Delta$): the detuning $\Delta$ is the mismatch between the laser frequency and the atom's natural $\vert 1 \rangle \to \vert r \rangle$ transition frequency. So if the laser is perfectly on resonance, $\Delta = 0$ and this term gone. If the laser is off-resonance, $\Delta \neq 0$ so that this term adds an energy penalty to the $\vert r \rangle$ state, effectively suppressing excitation. In this project, we set $\Delta(t) = 0$ for simplicity, but it could be made a second control parameter.
+2. **The detuning term** : the detuning $\Delta$ is the mismatch between the laser frequency and the atom's natural $\vert 1 \rangle \to \vert r \rangle$ transition frequency. So if the laser is perfectly on resonance, $\Delta = 0$ and this term gone. If the laser is off-resonance, $\Delta \neq 0$ so that this term adds an energy penalty to the $\vert r \rangle$ state, effectively suppressing excitation. In this project, we set $\Delta(t) = 0$ for simplicity, but it could be made a second control parameter.
 
-3. **The blockade term** ($U_\text{eff} \cdot \vert rr \rangle\langle rr \vert$): adds energy $U_\text{eff}$ whenever both atoms are simultaneously in $\vert r \rangle$. Since $U_\text{eff} \gg \Omega$, this energetically forbids the $\vert rr \rangle$ state, producing the blockade.
+3. **The blockade term**: adds energy $U_\text{eff}$ whenever both atoms are simultaneously in $\vert r \rangle$. Since $U_\text{eff} \gg \Omega$, this energetically forbids the $\vert rr \rangle$ state, producing the blockade.
+
 
 ### Open-System Dynamics and Noise
 
 
-For the ideal and isolated quantum system, the system described by a state vector $\lvert\psi\rangle$ that evolves according to the Schrödinger equation:
-$$\frac{d}{dt} \lvert\psi(t)\rangle = -i H(t) \lvert\psi(t)\rangle$$
 
-But real atoms are not isolated. We model three fundamental decoherence channels through the Lindblad master equation:
+We uses QuTiP's `mesolve` [8] function to model system dynamics, which makes it possible to simulate the noisy evolution of the quantum state under any candidate pulse $\Omega(t)$ and compute the resulting gate fidelity.
 
-$$\frac{d\rho}{dt} = -i[H, \rho] + \sum_k \left( L_k \rho L_k^\dagger - \frac{1}{2} L_k^\dagger L_k \rho - \frac{1}{2} \rho L_k^\dagger L_k \right)$$
+The noise channel used are listed below: 
 
-where $\rho$ is the density matrix, the generalized state descriptor that handles quantum superposition and classical statistical uncertainty simultaneously. The collapse operators $L_k$ encode each noise channel.
-
-This equation is integrated numerically using QuTiP's `mesolve` function over 200 time steps covering the gate duration $T$. This make it possible to simulate the noisy evolution of the quantum state under any candidate pulse $\Omega(t)$ and compute the resulting gate fidelity.
-
-
-### The noise channels 
-
-| Noise channel | Collapse operator | Rate |
+| Noise channel | Noise definition | Noise Rate |
 |---|---|---|
 | Spontaneous Rydberg decay $\vert r \rangle \to \vert 1 \rangle$ | $\sqrt{\gamma_r}\, \vert 1 \rangle\langle r \vert$ | $\gamma_r = 2\pi \times 3\,\text{kHz}$ |
 | Pure dephasing of $\vert r \rangle$ | $\sqrt{\gamma_\phi}\, \vert r \rangle\langle r \vert$ | $\gamma_\phi = 2\pi \times 1\,\text{kHz}$ |
 | Doppler dephasing | $\sqrt{\gamma_\text{Doppler}}\, \vert r \rangle\langle r \vert$ | $\gamma_\text{Doppler} = 2\pi \times 0.5\,\text{kHz}$ |
 
-The Lindblad master equation is integrated numerically using QuTiP's `mesolve` function over 200 time steps covering the gate duration $T$.
+Spontaneous decay causes excitation loss from $\vert r \rangle$ back to $\vert 1 \rangle$, which can disrupt the intended dynamics. 
 
-### Fidelity Metric
+Pure dephasing randomizes the phase of the $\vert r \rangle$ state, which can reduce coherence. 
 
-Gate fidelity is computed as the overlap between the noisy quantum process generated by the candidate pulse and the ideal CZ unitary. This is done by applying the candidate pulse to a complete set of input states, getting the resulting quantum process, and comparing it to the ideal process using the standard fidelity formula for quantum channels.
+Doppler dephasing arises from thermal motion of the atoms, causing fluctuations in the laser atom interaction and further reducing coherence.
 
-We need to optimize the pulse \$\Omega(t)$ to maximize this fidelity, which serves as the reward signal for the optimization algorithm.
+
+The rate for each noise channel is chosen to reflect experimentally measured values reported in the neutral atom literature [1, 5]. The effect of the spontaneous decay rate $\gamma_r$ is particularly significant to determine how long the system can remain in the $\vert r \rangle$ state without losing excitation. The dephasing rates $\gamma_\phi$ and $\gamma_\text{Doppler}$ contribute to loss of coherence, which can degrade gate fidelity even if excitation is preserved.
+
+
+### Fidelity Metric 
+
+Gate fidelity **F** is computed as the overlap between the noisy quantum process generated by the candidate pulse and the ideal CZ unitary. This is done by applying the candidate pulse to a complete set of input states, getting the resulting quantum process, and comparing it to the ideal process using the standard fidelity formula for quantum channels.
+
+We need to optimize the pulse $\Omega(t)$ to maximize this fidelity, which serves as the reward signal for the optimization algorithm.
 
 
 ---
 
-## 3. Algorithm
+## 4. Algorithm
 
 ## ML techniques to optimize the pulse shape
 
@@ -192,7 +198,7 @@ We choose to implement the Group Relative Policy Optimization (GRPO) algorithm, 
 
 ### The RL Environment
 
-I implement the physics simulator as a Gymnasium "python library for RL" compatible environment. The action space is a 20-dimensional box representing the pulse segments. Each time the agent "model" generates a complete pulse vector $\mathbf{u} \in [0,1]^{20}$, the simulator evaluates it under noise, and returns the fidelity as reward. The gate time is fixed at $T = 0.5\,\mu$s the empirical sweet spot between two competing effects, shorter gates reduce decoherence time but require steeper Rabi drives that are harder to control.
+I implement the physics simulator as a Gymnasium "python library for RL" compatible environment. The action space is a 20-dimensional box representing the pulse segments. Each time the agent "model" generates a complete pulse vector $\mathbf{u} \in [0,1]^{20}$, the simulator evaluates it under noise, and returns the fidelity as reward.
 
 For the optimization of the model, the reward is not raw fidelity but a shaped version designed to make training easier:
 
@@ -208,7 +214,7 @@ Also implemented in the environment is a noise curriculum where the  training be
 The following section describes the specific implementation of GRPO for this problem, which include the advantage calculation and the policy update rule.
 
 GRPO was originally designed for discrete token generation in language models [2]. Here we adapt it to a continuous 20 dimensional action space. The key equations are unchanged:
-
+Rabi
 Group-relative advantage: At each iteration, sample group $G$ pulse candidates $\{a_1, \ldots, a_G\}$ from the current policy model $\pi_\theta$ and evaluate each candidate's reward $r_i = R(F(a_i))$. Compute the group mean $\bar{r}$ and standard deviation $\sigma_r$, and calculate the advantage for each candidate as:
 
 $$A_i = \frac{r_i - \bar{r}}{\sigma_r + \varepsilon}$$
@@ -241,7 +247,7 @@ with momentum coefficient $\beta_m = 0.9$ and learning rate $\alpha = 0.05$.
 
 ---
 
-## 4. Experiments and Results
+## 5. Experiments and Results
 We use QuTiP's framework to implement the simulator and noise model, which allows us to easily simulate the open quantum dynamics and compute fidelities. 
 
 Four experiments were run, each targeting a specific question about the algorithm's behavior or the physics. All experiments use the same Rydberg simulator and noise model unless stated otherwise.
@@ -306,7 +312,7 @@ With 6 GRPO iterations, the best fidelity reached was **71.3%** which is proof o
 | Method | Fidelity (noisy) | Wall time |
 |---|---|---|
 | GRAPE (numerical) | 90.6% | ~500 s |
-| GRPO (G = 12, full run) | — | 99.99% | ~1,347 s |
+| GRPO (G = 12, full run)  | 99.99% | ~9,347 s |
 
 In the noisy evaluation GRAPE reaches 90.6%, which can be achieved using a well crafted pulse design. GRAPE struggles due to is that numerical finite difference gradients require two separate noisy evaluations per segment, so the gradient estimate has high variance. On the other hand, GRPO evaluates all G candidates within the same noise regime, and the relative ranking within the group is far more stable than the absolute difference between two individual noisy evaluations. But surprisingly, the we found that the best GRAPE and best GRPO pulses have a cosine similarity of 0.81, suggesting they converge to similar regions of pulse space. 
 
@@ -316,26 +322,21 @@ In the noisy evaluation GRAPE reaches 90.6%, which can be achieved using a well 
 
 ---
 
-## 5. Discussion
+## 6. Limitations 
 
-### What worked
+The noise assisted optimization finding warrants caution. A pulse whose fidelity decreases (exp3) when noise is removed has adapted to specific noise realizations rather than learning a truly noise robust shape. Proper robustness evaluation would require averaging over many independently sampled noise trajectories at test time with a fixed seed different from training this was not done and is an open question for follow up work.
 
-The most important finding is that GRPO— esigned for discrete token generation translates cleanly to this continuous control problem. The group relative advantage is a strong signal in noisy environments and the advantage is always well-defined as long as there is any spread within the group.
-
-The physics simulation at the level of detail used here, full Lindblad dynamics with realistic multi channel noise turns out to be the right fidelity. The optimizer finds pulses that reflect real Rydberg physics, not numerical artifacts: the optimal pulse durations and amplitude profiles are consistent with what one would expect from the timescales set by $\Omega_\text{max}$, $U_\text{eff}$, and $\gamma_r$.
-
-
-### Limitations 
-
-The noise assisted optimization finding warrants caution. A pulse whose fidelity decreases (exp3) when noise is removed has adapted to specific noise realizations rather than learning a truly noise robust shape. Proper robustness evaluation would require averaging over many independently sampled noise trajectories at test time with a fixed seed different from training—this was not done and is an open question for follow-up work.
-
-The three-atom CCZ scaling result is promising but the comparison is not clean: a CCZ gate requires a three body interaction that does not arise as naturally from the two-atom blockade Hamiltonian as a CZ does. The Hamiltonian model may need another formulation, may be using  multi-step pulse sequence for the CCZ to be physically realizable at high fidelity.
+The three atom CCZ scaling result is promising but the comparison is not clean: a CCZ gate requires a three body interaction that does not arise as naturally from the two atom blockade Hamiltonian as a CZ does. The Hamiltonian model may need another formulation, may be using  multi step pulse sequence for the CCZ to be physically realizable at high fidelity.
 
 ---
 
-## 6. Conclusion
+## 7. Conclusion
 
-This project built a simple pipeline for Rydberg CZ gate optimization: first principles Hamiltonian simulation via QuTiP's Lindblad master equation solver, a GRPO adapted training loop with a Gaussian policy network, and systematic ablation experiments comparing group size, noise curriculum and classical baselines. This project explain how to integrate physics simulation with modern RL algorithms to solve a real-world quantum control problem.
+This project built a simple pipeline for Rydberg CZ gate optimization: first principles Hamiltonian simulation via QuTiP's mesolve, a GRPO adapted training loop with a Gaussian policy network, and systematic ablation experiments comparing group size, noise curriculum and classical baselines. This project explain how to integrate physics simulation with modern RL algorithms to solve a real-world quantum control problem.
+
+The main result is that GRPO can find a pulse shape that achieves 99.99% fidelity under realistic noise conditions, significantly outperforming a classical GRAPE baseline. The noise ablation experiment revealed that the optimized pulse does not rely on any specific noise mitigation strategy, suggesting it has found a robust solution. 
+
+
 ## References
 
 [1] S. J. Evered, D. Bluvstein, M. Kalinowski, S. Ebadi, T. Manovitz, H. Zhou, S. H. Li, A. A. Geim, T. T. Wang, N. Maskara, H. Levine, M. Greiner, V. Vuletić, and M. D. Lukin, "High-fidelity parallel entangling gates on a neutral-atom quantum computer," *Nature* **622**, 268–272 (2023).
@@ -348,6 +349,10 @@ This project built a simple pipeline for Rydberg CZ gate optimization: first pri
 
 [5] M. Saffman, T. G. Walker, and K. Mølmer, "Quantum information with Rydberg atoms," *Rev. Mod. Phys.* **82**, 2313 (2010).
 
-[6] QuEra Computing, "Pulse-level CZ gate via Rydberg blockade," *Bloqade.jl Documentation*, [https://queracomputing.github.io/Bloqade.jl/dev/3-level/#pulse-CZ-gate](https://queracomputing.github.io/Bloqade.jl/dev/3-level/#pulse-CZ-gate) (accessed June 2026).
+[6] QuEra Computing, "Pulse-level CZ gate via Rydberg blockade," *Bloqade.jl Documentation*, [https://queracomputing.github.io/Bloqade.jl/dev/3-level/#pulse-CZ-gate](https://queracomputing.github.io/Bloqade.jl/dev/3-level/#pulse-CZ-gate) 
 
 [7] Y. Cai, H. Zhang, K. Zhang, and J. Qian, "Intelligent Optimal Control of Rydberg Gates with Incremental-Update Deep Reinforcement Learning," arXiv:2605.04628 (2026).
+
+[8] Qutip mesolve documentation, [https://qutip.org/docs/4.0.2/modules/qutip/mesolve.html](https://qutip.org/docs/4.0.2/modules/qutip/mesolve.html) 
+
+[9] Hou, Qing-Ling and Wang, Han and Qian, Jing, "Active robustness against detuning error for Rydberg quantum gates," American Physical Society
